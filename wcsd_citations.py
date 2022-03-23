@@ -5,40 +5,39 @@ import sys
 sys.path.append('../archive-web-search/')
 from DB_connect import OracleConnection
 
+# TODO: Update format of the web page to better describe stationary datasets. Stationary
+#  data won't always have a cruise or ship associated with them. Adding Dataset Name could
+#  address this. Cruise and Ship fields can be n/a for these data types. Work with Chuck to
+#  update html page, then update this script.
 
-# This script queries the water column sonar database for dataset citations and creates a java script
-# output file to be translated into an html page by Chuck.  It also can generate a json output file in
-# case we decide to use json instead.  That part of the code is commented out
+# This script queries the Cruise database for water column sonar dataset citations and creates
+# a java script output file to be translated into an html page by Chuck. It also can generate
+# a json output file in case we decide to use json instead. That part is commented out.
 
-
-def get_citation(db, wcs_id, instrument):
-    """Query citation and doi in the database
-
-        Args:
-            db(object): database object
-            wcs_id(str): dataset identifer in the database
-            instrument(str): instrument name
-    """
-    q_command = "select CITATION_TEXT, CITATION_LINK from WCD.INSTRUMENTS " \
-                "where WCS_ID = :id and INSTRUMENT_NAME= :inst"
-    data = {"id": wcs_id, "inst": instrument}
-    result = db.fetch_one(q_command, data)
-    citation = result['CITATION_TEXT']
-    doi = result['CITATION_LINK']
-    return citation, doi
-
+# web page url: https://www.ngdc.noaa.gov/mgg/wcd/citations.html
 
 # Connect to database (config file located in root directory)
-config_file = "wcd_prod.config"
+config_file = "cruise_prod.config"
 config_path = os.path.join(os.path.expanduser("~"), '.connections', config_file)
 
 database = OracleConnection(config_path)
 
-# Query database
+# Query database for cruises
 q_command = "select WCS_ID, SHIP_NAME, CRUISE_NAME, INSTRUMENT_NAME, SOURCE_NAME, " \
-            "SOURCE_GROUP, PUBLISH_DATE as ARCHIVE_DATE from WCD.SURVEY_SUMMARY_AGG_MSQL where " \
+            "SOURCE_GROUP, CITATION_TEXT, CITATION_LINK, PUBLISH_DATE as ARCHIVE_DATE " \
+            "from CRUISE.SURVEY_SUMMARY_AGG_MSQL where " \
             "PUBLISH='Y' ORDER BY ARCHIVE_DATE DESC"
-result = database.fetch_all(q_command)
+result1 = database.fetch_all(q_command)
+
+# Query database for stationary deployments
+q_command = "select WCS_ID, SHIP_NAME, CRUISE_NAME, INSTRUMENT_NAME, SOURCE_NAME, " \
+            "SOURCE_GROUP, CITATION_TEXT, CITATION_LINK, PUBLISH_DATE as ARCHIVE_DATE " \
+            "from CRUISE.SURVEY_SUMMARY_AGG_MSQP where " \
+            "PUBLISH='Y' ORDER BY ARCHIVE_DATE DESC"
+result2 = database.fetch_all(q_command)
+
+# Combine results
+result = result1 + result2
 
 # java script output file
 java_file = open("/nfs/marine_images/wcd/data_source.js", "w")
@@ -59,7 +58,8 @@ for row in result:
         source = source.replace("UNOLS", "Rolling Deck to Repository")
     elif "Woods Hole Oceanographic Institution" in source:
         source = source.replace("Woods Hole Oceanographic Institution", "WHOI")
-    citation, doi = get_citation(database, row['WCS_ID'], instrument)
+    citation = row['CITATION_TEXT']
+    doi = row['CITATION_LINK']
 
     if not citation:
         print(f"No citation for {cruise} in the database")

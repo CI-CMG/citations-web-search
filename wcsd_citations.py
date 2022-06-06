@@ -23,7 +23,7 @@ config_path = os.path.join(os.path.expanduser("~"), '.connections', config_file)
 database = OracleConnection(config_path)
 
 # Query database for cruises
-q_command = "select WCS_ID, SHIP_NAME, CRUISE_NAME, INSTRUMENT_NAME, SOURCE_NAME, " \
+q_command = "select WCS_ID, PLATFORM_NAME, CRUISE_NAME, INSTRUMENT_NAME, SOURCE_NAME, " \
             "SOURCE_GROUP, CITATION_TEXT, CITATION_LINK, PUBLISH_DATE as ARCHIVE_DATE " \
             "from CRUISE.SURVEY_SUMMARY_AGG_MSQL where " \
             "PUBLISH='Y' ORDER BY ARCHIVE_DATE DESC"

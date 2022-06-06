@@ -30,7 +30,7 @@ q_command = "select WCS_ID, PLATFORM_NAME, CRUISE_NAME, INSTRUMENT_NAME, SOURCE_
 result1 = database.fetch_all(q_command)
 
 # Query database for stationary deployments
-q_command = "select WCS_ID, SHIP_NAME, CRUISE_NAME, INSTRUMENT_NAME, SOURCE_NAME, " \
+q_command = "select WCS_ID, PLATFORM_NAME, CRUISE_NAME, INSTRUMENT_NAME, SOURCE_NAME, " \
             "SOURCE_GROUP, CITATION_TEXT, CITATION_LINK, PUBLISH_DATE as ARCHIVE_DATE " \
             "from CRUISE.SURVEY_SUMMARY_AGG_MSQP where " \
             "PUBLISH='Y' ORDER BY ARCHIVE_DATE DESC"
@@ -50,7 +50,7 @@ data['data'] = []
 for row in result:
     cruise = row["CRUISE_NAME"]
     instrument = row["INSTRUMENT_NAME"]
-    ship = row["SHIP_NAME"]
+    ship = row["PLATFORM_NAME"]
     source_group = row["SOURCE_GROUP"].replace("|", "", 1)[: -1].replace("|", ", ")
     # clean up source names
     source = row['SOURCE_NAME'].replace("|", "", 1)[: -1].replace("|", ", ")
